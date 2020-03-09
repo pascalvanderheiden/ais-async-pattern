@@ -531,7 +531,7 @@
           "type": "providers/diagnosticSettings",
           "name": "[concat('Microsoft.Insights/', parameters('diagnosticSettings_name'))]",
           "dependsOn": [
-            "[parameters('logicAppNameOrchestrator')]"
+            "[parameters('logicAppNameProcessor')]"
           ],
           "apiVersion": "2017-05-01-preview",
           "properties": {

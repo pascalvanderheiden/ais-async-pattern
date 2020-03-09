@@ -9,14 +9,13 @@
 # -p API Management Instance (Developer tier)
 # -n Service Bus Namespace (Premium tier for Event Grid)
 # -q Service Bus Queue
-# -i Application Insights (API Management Logging)
 # -w Log Analytics Workspace (Logic Apps Logging)
 # -k Key Vault
-# -s Key Vault Logic Apps Connection String Label
+# -s Key Vault Service Bus Connection String Label
 # -x Key Vault Cosmos DB Key Label
 # 
 # Executing it with minimum parameters:
-#   ./azuredeploy.sh -r ais-async-rg -l westeurope -a aisasyncosmos-acc -d aisasync-db -c customer-con -p aisasync -n aisasync-ns -q customer-queue -i aisasync-ai -w aisasync-ws -k aisasync-kv -s aisasynclogicapps -x aisasynccosmosdb
+#   ./azuredeploy.sh -r ais-async-rg -l westeurope -a aisasyncosmos-acc -d aisasync-db -c customer-con -p aisasync -n aisasync-ns -q customer-queue -w aisasync-ws -k aisasync-kv -s aisasyncservicebus -x aisasynccosmosdb
 #
 # This script assumes that you already executed "az login" to authenticate 
 #
@@ -37,10 +36,9 @@ do
 		p) APIM=${OPTARG};;
 		n) SERVICEBUSNS=${OPTARG};;
 		q) SERVICEBUSQUEUE=${OPTARG};;
-		i) APPINSIGHTS=${OPTARG};;
 		w) LOGANALYTICS=${OPTARG};;
 		k) KV=${OPTARG};;
-		s) KVLOGICAPPLABEL=${OPTARG};;
+		s) KVSERVICEBUSLABEL=${OPTARG};;
 		x) KVCOSMOSDBLABEL=${OPTARG};;
 	esac
 done
@@ -54,7 +52,7 @@ trim() {
 }
 
 # Setting up some default values if not provided
-# if [ -z ${RESOURCEGROUP} ]; then RESOURCEGROUP="wordpress-rg"; fi 
+# if [ -z ${RESOURCEGROUP} ]; then RESOURCEGROUP="aisasync-rg"; fi 
 
 echo "Input parameters"
 echo "   Resource Group: ${RESOURCEGROUP}"
@@ -65,10 +63,9 @@ echo "   Cosmos DB Container: ${COSMOSCON}"
 echo "   API Management Instance: ${APIM}"
 echo "   Service Bus Namespace: ${SERVICEBUSNS}"
 echo "   Service Bus Queue: ${SERVICEBUSQUEUE}"
-echo "   Application Insights: ${APPINSIGHTS}"
 echo "   Log Analytics Workspace: ${LOGANALYTICS}"
 echo "   Key Vault: ${KV}"
-echo "   Key Vault Logic Apps Connection String Label: ${KVLOGICAPPLABEL}"
+echo "   Key Vault Service Bus Connection String Label: ${KVSERVICEBUSLABEL}"
 echo "   Key Vault Cosmos DB Key Label: ${KVCOSMOSDBLABEL}"; echo
 
 #--------------------------------------------
@@ -79,7 +76,6 @@ az provider register -n Microsoft.DocumentDB
 az provider register -n Microsoft.ApiManagement
 az provider register -n Microsoft.Logic
 az provider register -n Microsoft.ServiceBus
-az provider register -n microsoft.insights
 az provider register -n Microsoft.OperationsManagement
 az provider register -n Microsoft.EventGrid
 az provider register -n Microsoft.keyvault
@@ -114,11 +110,11 @@ fi
 #--------------------------------------------
 # Creating Cosmos DB Database
 #-------------------------------------------- 
-echo "Creating Cosmos DB Account ${COSMOSDB}"
-RESULT=$(az cosmosdb database exists -d $COSMOSDB -n $COSMOSACC -g $RESOURCEGROUP)
-if [ "$RESULT" != "true" ]
+echo "Creating Cosmos DB Database ${COSMOSDB}"
+RESULT=$(az cosmosdb sql database show -n $COSMOSDB -a $COSMOSACC -g $RESOURCEGROUP)
+if [ "$RESULT" = "" ]
 then
-	az cosmosdb database create -n $COSMOSACC -g $RESOURCEGROUP --db-name $COSMOSDB --throughput 400
+	az cosmosdb sql database create -a $COSMOSACC -g $RESOURCEGROUP -n $COSMOSDB --throughput 400
 else
 	echo "   Cosmos DB Database ${COSMOSDB} already exists"
 fi
@@ -127,24 +123,12 @@ fi
 # Creating Cosmos DB Container
 #-------------------------------------------- 
 echo "Creating Cosmos DB Container ${COSMOSCON}"
-RESULT=$(az cosmosdb collection exists -c $COSMOSCON -d $COSMOSDB)
-if [ "$RESULT" != "true" ]
-then
-	az cosmosdb collection create -c $COSMOSCON -d $COSMOSDB --partition-key-path "/message/lastName"
-else
-	echo "   Cosmos DB Container ${COSMOSCON} already exists"
-fi
-
-#--------------------------------------------
-# Creating Application Insights
-#-------------------------------------------- 
-echo "Creating Application Insights ${APPINSIGHTS}"
-RESULT=$(az monitor app-insights component show -a $APPINSIGHTS -g $RESOURCEGROUP)
+RESULT=$(az cosmosdb sql container show -a $COSMOSACC -g $RESOURCEGROUP -n $COSMOSCON -d $COSMOSDB)
 if [ "$RESULT" = "" ]
 then
-	az monitor app-insights component create -a $APPINSIGHTS -g $RESOURCEGROUP -l $LOCATION 
+	az cosmosdb sql container create -a $COSMOSACC -g $RESOURCEGROUP -n $COSMOSCON -d $COSMOSDB -p "/message/lastName"
 else
-	echo "   Application Insights ${APPINSIGHTS} already exists"
+	echo "   Cosmos DB Container ${COSMOSCON} already exists"
 fi
 
 #--------------------------------------------
@@ -179,8 +163,13 @@ RESULT=$(az servicebus namespace exists -n $SERVICEBUSNS)
 if [ "$RESULT" != "true" ]
 then
 	az servicebus namespace create -g $RESOURCEGROUP -n $SERVICEBUSNS -l $LOCATION --sku Premium
+	# Create a authorization rule for the Logic App (for the name of the rule I'm using the same label as that of the Key Vault entry)
+	az servicebus namespace authorization-rule create -g $RESOURCEGROUP --namespace-name $SERVICEBUSNS -n $KVSERVICEBUSLABEL --rights Listen Send
+	# Get Secure Connection String
+	SBCONNECTIONSTRING=$(az servicebus namespace authorization-rule keys list -g $RESOURCEGROUP --namespace-name $SERVICEBUSNS -n $KVSERVICEBUSLABEL --query primaryConnectionString -o tsv)
 else
-	echo "   Service Bus Namespace ${SERVICEBUSNS} already exists"
+	echo "   Service Bus Namespace ${SERVICEBUSNS} already exists, retrieve connection string"
+	SBCONNECTIONSTRING=$(az servicebus namespace authorization-rule keys list -g $RESOURCEGROUP --namespace-name $SERVICEBUSNS -n $KVSERVICEBUSLABEL --query primaryConnectionString -o tsv)
 fi
 
 #--------------------------------------------
@@ -191,13 +180,8 @@ RESULT=$(az servicebus queue show -g $RESOURCEGROUP --namespace-name $SERVICEBUS
 if [ "$RESULT" = "" ]
 then
 	az servicebus queue create -g $RESOURCEGROUP --namespace-name $SERVICEBUSNS -n $SERVICEBUSQUEUE
-	# Create a authorization rule for the Logic App (for the name of the rule I'm using the same label as that of the Key Vault entry)
-	az servicebus queue authorization-rule create -g $RESOURCEGROUP --namespace-name $SERVICEBUSNS --queue-name $SERVICEBUSQUEUE -n $KVLOGICAPPLABEL --rights Listen Send
-	# Get Secure Connection String
-	SBCONNECTIONSTRING=$(az servicebus queue authorization-rule keys list -g $RESOURCEGROUP --namespace-name $SERVICEBUSNS --queue-name $SERVICEBUSQUEUE -n $KVLOGICAPPLABEL --query primaryConnectionString -o tsv)
 else
-	echo "   Service Bus Queue ${SERVICEBUSQUEUE} already exists, retrieve connection string"
-	SBCONNECTIONSTRING=$(az servicebus queue authorization-rule keys list -g $RESOURCEGROUP --namespace-name $SERVICEBUSNS --queue-name $SERVICEBUSQUEUE -n $KVLOGICAPPLABEL --query primaryConnectionString -o tsv)
+	echo "   Service Bus Queue ${SERVICEBUSQUEUE} already exists"
 fi
 
 #--------------------------------------------
@@ -208,7 +192,7 @@ RESULT=$(az keyvault show -n $KV)
 if [ "$RESULT" = "" ]
 then
 	az keyvault create -l $LOCATION -n $KV -g $RESOURCEGROUP
-	az keyvault secret set --vault-name "$KV" --name "$KVLOGICAPPLABEL" --value "$SBCONNECTIONSTRING"
+	az keyvault secret set --vault-name "$KV" --name "$KVSERVICEBUSLABEL" --value "$SBCONNECTIONSTRING"
 	az keyvault secret set --vault-name "$KV" --name "$KVCOSMOSDBLABEL" --value "$COSMOSDBKEY"
 else
 	echo "   Key Vault ${KV} already exists"
