@@ -72,6 +72,7 @@ echo "   Key Vault Cosmos DB Key Label: ${KVCOSMOSDBLABEL}"; echo
 # Registering providers & extentions
 #--------------------------------------------
 echo "Registering providers"
+az extension add -n eventgrid
 az provider register -n Microsoft.DocumentDB
 az provider register -n Microsoft.ApiManagement
 az provider register -n Microsoft.Logic
@@ -110,7 +111,7 @@ fi
 #--------------------------------------------
 # Creating Cosmos DB Database
 #-------------------------------------------- 
-echo "Creating Cosmos DB Database ${COSMOSDB}"
+echo "Creating Cosmos DB Account ${COSMOSDB}"
 RESULT=$(az cosmosdb sql database show -n $COSMOSDB -a $COSMOSACC -g $RESOURCEGROUP)
 if [ "$RESULT" = "" ]
 then
@@ -179,7 +180,7 @@ echo "Creating Service Bus Queue ${SERVICEBUSQUEUE}"
 RESULT=$(az servicebus queue show -g $RESOURCEGROUP --namespace-name $SERVICEBUSNS -n $SERVICEBUSQUEUE)
 if [ "$RESULT" = "" ]
 then
-	az servicebus queue create -g $RESOURCEGROUP --namespace-name $SERVICEBUSNS -n $SERVICEBUSQUEUE
+	az servicebus queue create -g $RESOURCEGROUP --namespace-name $SERVICEBUSNS -n $SERVICEBUSQUEUE --max-size 1024
 else
 	echo "   Service Bus Queue ${SERVICEBUSQUEUE} already exists"
 fi
