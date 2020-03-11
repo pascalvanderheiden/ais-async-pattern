@@ -13,9 +13,10 @@
 # -k Key Vault
 # -s Key Vault Service Bus Connection String Label
 # -x Key Vault Cosmos DB Key Label
+# -y Cosmos DB Container Partition Key
 # 
 # Executing it with minimum parameters:
-#   ./azuredeploy.sh -r ais-async-rg -l westeurope -a aisasyncosmos-acc -d aisasync-db -c customer-con -p aisasync -n aisasync-ns -q customer-queue -w aisasync-ws -k aisasync-kv -s aisasyncservicebus -x aisasynccosmosdb
+#   ./azuredeploy.sh -r ais-async-rg -l westeurope -a aisasyncosmos-acc -d aisasync-db -c customer-con -p aisasync -n aisasync-ns -q customer-queue -w aisasync-ws -k aisasync-kv -s aisasyncservicebus -x aisasynccosmosdb -y "/message/lastName"
 #
 # This script assumes that you already executed "az login" to authenticate 
 #
@@ -24,7 +25,7 @@
 # For example: az ad sp create-for-rbac --name aisasync
 # Copy output JSON: AppId and password
 
-while getopts r:l:a:d:c:p:n:q:i:w:e:k:s:x: option
+while getopts r:l:a:d:c:p:n:q:i:w:e:k:s:x:y: option
 do
 	case "${option}"
 	in
@@ -40,6 +41,7 @@ do
 		k) KV=${OPTARG};;
 		s) KVSERVICEBUSLABEL=${OPTARG};;
 		x) KVCOSMOSDBLABEL=${OPTARG};;
+		y) COSMOSCONPARTKEY=${OPTARG};;		
 	esac
 done
 
@@ -66,7 +68,8 @@ echo "   Service Bus Queue: ${SERVICEBUSQUEUE}"
 echo "   Log Analytics Workspace: ${LOGANALYTICS}"
 echo "   Key Vault: ${KV}"
 echo "   Key Vault Service Bus Connection String Label: ${KVSERVICEBUSLABEL}"
-echo "   Key Vault Cosmos DB Key Label: ${KVCOSMOSDBLABEL}"; echo
+echo "   Key Vault Cosmos DB Key Label: ${KVCOSMOSDBLABEL}"
+echo "   Cosmos DB Container Partition Key: ${COSMOSCONPARTKEY}"; echo
 
 #--------------------------------------------
 # Registering providers & extentions
@@ -127,7 +130,7 @@ echo "Creating Cosmos DB Container ${COSMOSCON}"
 RESULT=$(az cosmosdb sql container show -a $COSMOSACC -g $RESOURCEGROUP -n $COSMOSCON -d $COSMOSDB)
 if [ "$RESULT" = "" ]
 then
-	az cosmosdb sql container create -a $COSMOSACC -g $RESOURCEGROUP -n $COSMOSCON -d $COSMOSDB -p "/message/lastName"
+	az cosmosdb sql container create -a $COSMOSACC -g $RESOURCEGROUP -n $COSMOSCON -d $COSMOSDB -p "$COSMOSCONPARTKEY"
 else
 	echo "   Cosmos DB Container ${COSMOSCON} already exists"
 fi

@@ -5,7 +5,9 @@ The architecture is based on the Enterprise integration with queues and events:
 https://docs.microsoft.com/en-us/azure/architecture/reference-architectures/enterprise-integration/queues-events
 
 I've used API Management GUI to create the API. And, I've used the Extract Tool to create the defnition for my API:
-https://github.com/Azure/azure-api-management-devops-resource-kit 
+https://github.com/Azure/azure-api-management-devops-resource-kit
+
+https://azure.microsoft.com/en-us/blog/build-a-ci-cd-pipeline-for-api-management/
 
 ## Azure Architecture
 ![ais-sync-pattern](docs/images/arch.png)
@@ -82,7 +84,7 @@ Note. Because I've enabled continuous deployment in my template, there is a fail
 - In Variables groups, link the "Key Vault Secrets" variable group, by clicking the Link button.
 - Save & Create Release.
 
-## Step 8: Go to your API Management Instance and test the API
+### Step 8: Go to your API Management Instance and test the API
 In the Azure Portal, just go to API Management, APIs, click your new API (Customer), Click the operation POST and click the tab "Test". Past the sample json (in this repo, sample-request.json) into the request body and click Send.
 
 ## Contributing

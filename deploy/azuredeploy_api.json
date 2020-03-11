@@ -1,0 +1,146 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "ApimServiceName": {
+      "type": "string"
+    },
+    "ApiName": {
+      "type": "string"
+    },
+    "ApiOperation": {
+      "type": "string"
+    },
+    "ApiPath": {
+      "type": "string"
+    },
+    "BackendServiceURL": {
+      "type": "string"
+    },
+    "logicAppNameOrchestrator": {
+      "type": "string"
+    },
+    "ApimResourceGroup": {
+      "type": "string"
+    },
+    "ApplicationInsightsName": {
+      "type": "string"
+    }
+  },
+  "resources": [
+    {
+      "properties": {
+        "description": "An implementation of an asynchronous pattern with Azure Integration Services to create a new customer.",
+        "authenticationSettings": {
+          "subscriptionKeyRequired": false
+        },
+        "subscriptionKeyParameterNames": {
+          "header": "Ocp-Apim-Subscription-Key",
+          "query": "subscription-key"
+        },
+        "apiRevision": "1",
+        "isCurrent": true,
+        "subscriptionRequired": true,
+        "displayName": "[parameters('ApiName')]",
+        "serviceUrl": "[parameters('BackendServiceURL')]",
+        "path": "[parameters('ApiPath')]",
+        "protocols": [
+          "https"
+        ]
+      },
+      "name": "[concat(parameters('ApimServiceName'), '/', parameters('logicAppNameOrchestrator'))]",
+      "type": "Microsoft.ApiManagement/service/apis",
+      "apiVersion": "2019-01-01",
+      "dependsOn": []
+    },
+    {
+      "properties": {
+        "templateParameters": [],
+        "description": "Trigger a run of the logic app.",
+        "request": {
+          "description": "The request body.",
+          "queryParameters": [],
+          "headers": []
+        },
+        "responses": [
+          {
+            "statusCode": 200,
+            "description": "The Logic App Response.",
+            "headers": []
+          }
+        ],
+        "displayName": "[parameters('ApiOperation')]",
+        "method": "POST",
+        "urlTemplate": "[concat('/',parameters('ApiOperation'))]"
+      },
+      "name": "[concat(parameters('ApimServiceName'), '/', parameters('logicAppNameOrchestrator'), '/manual-invoke')]",
+      "type": "Microsoft.ApiManagement/service/apis/operations",
+      "apiVersion": "2019-01-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('ApimServiceName'), parameters('logicAppNameOrchestrator'))]"
+      ]
+    },
+    {
+      "properties": {},
+      "name": "[concat(parameters('ApimServiceName'), '/starter/', parameters('logicAppNameOrchestrator'))]",
+      "type": "Microsoft.ApiManagement/service/products/apis",
+      "apiVersion": "2019-01-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('ApimServiceName'), parameters('logicAppNameOrchestrator'))]"
+      ]
+    },
+    {
+      "properties": {},
+      "name": "[concat(parameters('ApimServiceName'), '/unlimited/aisasync-orchestrator-la')]",
+      "type": "Microsoft.ApiManagement/service/products/apis",
+      "apiVersion": "2019-01-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('ApimServiceName'), parameters('logicAppNameOrchestrator'))]"
+      ]
+    },
+    {
+      "properties": {
+        "alwaysLog": "allErrors",
+        "loggerId": "[concat('/subscriptions/',subscription().id,'/resourceGroups/',parameters('ApimResourceGRoup'),'/providers/Microsoft.ApiManagement/service/',parameters('ApimServiceName'),'/loggers/',parameters('ApplicationInsightsName'))]",
+        "sampling": {
+          "samplingType": "fixed",
+          "percentage": 100.0
+        },
+        "frontend": {
+          "request": {
+            "headers": [],
+            "body": {
+              "bytes": 0
+            }
+          },
+          "response": {
+            "headers": [],
+            "body": {
+              "bytes": 0
+            }
+          }
+        },
+        "backend": {
+          "request": {
+            "headers": [],
+            "body": {
+              "bytes": 0
+            }
+          },
+          "response": {
+            "headers": [],
+            "body": {
+              "bytes": 0
+            }
+          }
+        }
+      },
+      "name": "[concat(parameters('ApimServiceName'), '/',parameters('logicAppNameOrchestrator'),'/applicationinsights')]",
+      "type": "Microsoft.ApiManagement/service/apis/diagnostics",
+      "apiVersion": "2019-01-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/apis', parameters('ApimServiceName'), parameters('logicAppNameOrchestrator'))]"
+      ]
+    }
+  ]
+}
