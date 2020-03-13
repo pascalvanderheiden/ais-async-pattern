@@ -14,7 +14,10 @@
     "ApiPath": {
       "type": "string"
     },
-    "BackendServiceURL": {
+    "BackendServiceURLPath": {
+      "type": "string"
+    },
+    "BackendServiceBaseURL": {
       "type": "string"
     },
     "logicAppNameOrchestrator": {
@@ -42,7 +45,7 @@
         "isCurrent": true,
         "subscriptionRequired": true,
         "displayName": "[parameters('ApiName')]",
-        "serviceUrl": "[parameters('BackendServiceURL')]",
+        "serviceUrl": "[parameters('BackendServiceBaseURL')]",
         "path": "[parameters('ApiPath')]",
         "protocols": [
           "https"
@@ -81,6 +84,18 @@
       ]
     },
     {
+      "properties": {
+        "value": "[concat('<policies>\r\n\t<inbound>\r\n\t\t<base />\r\n\t\t<set-method id=\"apim-generated-policy\">POST</set-method>\r\n\t\t<rewrite-uri id=\"apim-generated-policy\" template=\"',parameters('BackendServiceURLPath'),'\" />\r\n\t\t<set-header id=\"apim-generated-policy\" name=\"Ocp-Apim-Subscription-Key\" exists-action=\"delete\" />\r\n\t</inbound>\r\n\t<backend>\r\n\t\t<base />\r\n\t</backend>\r\n\t<outbound>\r\n\t\t<base />\r\n\t</outbound>\r\n\t<on-error>\r\n\t\t<base />\r\n\t</on-error>\r\n</policies>')]",
+        "format": "rawxml"
+      },
+      "name": "[concat(parameters('ApimServiceName'), '/',parameters('logicAppNameOrchestrator'),'/manual-invoke/policy')]",
+      "type": "Microsoft.ApiManagement/service/apis/operations/policies",
+      "apiVersion": "2019-01-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('ApimServiceName'), parameters('logicAppNameOrchestrator'), 'manual-invoke')]"
+      ]
+    },
+    {
       "properties": {},
       "name": "[concat(parameters('ApimServiceName'), '/starter/', parameters('logicAppNameOrchestrator'))]",
       "type": "Microsoft.ApiManagement/service/products/apis",
@@ -91,7 +106,7 @@
     },
     {
       "properties": {},
-      "name": "[concat(parameters('ApimServiceName'), '/unlimited/aisasync-orchestrator-la')]",
+      "name": "[concat(parameters('ApimServiceName'), '/unlimited/', parameters('logicAppNameOrchestrator'))]",
       "type": "Microsoft.ApiManagement/service/products/apis",
       "apiVersion": "2019-01-01",
       "dependsOn": [
