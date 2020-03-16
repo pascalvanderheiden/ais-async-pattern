@@ -235,7 +235,7 @@
             "Compose_Queue_Message": {
               "type": "Compose",
               "inputs": {
-                "message": "@triggerBody()",
+                "message": "@json(triggerBody())",
                 "id": "@{guid()}"
               },
               "runAfter": {
