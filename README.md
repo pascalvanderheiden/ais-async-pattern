@@ -57,7 +57,7 @@ You can find the documentation on the Azure DevOps Generator here: https://vstsd
 ### Step 4: In Azure DevOps, update the Variables Group.
 - Go to Pipelines, Library. Click on the Variable group "Shared Resources".
 - Tick "Allow access to all pipelines.
-- Update the variables to match your naming conventions needs.
+- Update the variables to match your naming conventions needs. I've put in some generic naming, but you need to update the variables. Otherwise, the creation of some services will fail, because they've been already used.
 - The variable "KVCOSMOSDBLABEL" and "KVSERVICEBUSLABEL" are used as labels for Key Vault te retrieve the connection string and key for API Connections. Leave that as it is: "aissharedcosmosdb" and "aissharedservicebus"
 - Don't forget to save.
 
@@ -65,7 +65,7 @@ You can find the documentation on the Azure DevOps Generator here: https://vstsd
 - Go to Pipelines, Pipelines.
 - Select "Build Azure Integration Services shared resources-CI", Edit.
 - In Tasks, select the Tasks which have the explaination mark "Some settings need attention", and update Azure Subscription to your Service Principal Connection.
-- In Variables, update the variables to match your naming conventions needs. Keep in mind to pick unique naming for exposed services.
+- In Variables, update the variables to match your naming conventions needs. Keep in mind to pick unique naming for exposed services. I've put in some generic naming, but you need to update the variables. Otherwise, the creation of some services will fail, because they've been already used.
 - Save & queue.
 - Click the Agent Job to check the progress. Check if everything is create correctly, because of the unique naming for some services. And because it's fun :-)
 - Keep in mind that the CLI scripts will check if the resource is already created, before creating. I've used an ARM Template for the deployment of the Application Insights, because I wanted to automatically integrate it with the API Management Instance I've just created. This is not yet supported in AZ CLI.
