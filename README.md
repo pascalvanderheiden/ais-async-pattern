@@ -39,7 +39,7 @@ Copy the JSON Output! We'll be needing this information to create the service co
 
 ### Step 2: Generate your Azure DevOps Project for Continuous Integration & Deployment with the Azure DevOps Generator
 - In the devops folder of this repo the Azure DevOps template is included. Download it.
-- Login with your account and open the DevOps Generator: https://azuredevopsdemogenerator.azurewebsites.net/environment/createproject
+- Login with your account and open the DevOps Generator: https://azuredevopsdemogenerator.azurewebsites.net/environment/createproject?enableextractor=true
 - Choose a custom template and point to the zip-file in the devops folder. This repo will be imported into Azure DevOps and Pipelines are created for you.
 
 The project is split-up into 2 pieces; shared resources & integration specific resources. Enabling you to extend your project with more integration and re-using the shared resources for cost efficiency.
@@ -49,16 +49,17 @@ You can find the documentation on the Azure DevOps Generator here: https://vstsd
 ### Step 3: In Azure DevOps, create a service connection
 - Login with your account Azure DevOps. Go to the Project Settings of the DevOps Project you've created in step 2.
 - Go to Service Connections*.
-- Create a service connection, choose Azure Resource Manager, next.
-- Select Service Principal Authentication. Choose the correct Subscription first, then click the link at the bottom: "use the full version of the service connection dialog.".
-- Enter a name for your Service Principal and copy the appId from step 1 in "Service principal client ID" and the password from step 1 in "Service principal key". And Verify the connection.
-- Tick "Allow all pipelines to use this connection.". OK.
+- Create a new service connection, choose Azure Resource Manager, next.
+- Select Service Principal (manual).
+- Fill in the Subscription Id, Subscription Name.
+- Copy the appId from step 1 in "Service Principal Id" and the password from step 1 in "Service Principal key". Give the service connection a name and verify the connection.
+- Tick "Grant access permission to all pipelines. Save.
 
 ### Step 4: In Azure DevOps, update the Variables Group.
 - Go to Pipelines, Library. Click on the Variable group "Shared Resources".
 - Tick "Allow access to all pipelines.
-- Update the variables to match your naming conventions needs. I've put in some generic naming, but you need to update the variables. Otherwise, the creation of some services will fail, because they've been already used.
-- The variable "KVCOSMOSDBLABEL" and "KVSERVICEBUSLABEL" are used as labels for Key Vault te retrieve the connection string and key for API Connections. Leave that as it is: "aissharedcosmosdb" and "aissharedservicebus"
+- Update the values of the variables to match your naming conventions needs. I've put in some generic naming, but you need to update the variables. Otherwise, the creation of some services will fail, because they've been already used.
+- The variable "KVCOSMOSDBLABEL" and "KVSERVICEBUSLABEL" are used as labels for Key Vault to retrieve the connection string and key for API Connections. Leave that as it is: "aissharedcosmosdb" and "aissharedservicebus"
 - Don't forget to save.
 
 ### Step 5: In Azure DevOps, update the Build pipeline and Run it.
