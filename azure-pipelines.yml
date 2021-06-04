@@ -1,0 +1,67 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+# pool:
+#   vmImage: ubuntu-latest
+
+# steps:
+# - script: echo Hello, world!
+#   displayName: 'Run a one-line script'
+
+# - script: |
+#     echo Add other tasks to build, test, and deploy your project.
+#     echo See https://aka.ms/yaml
+#   displayName: 'Run a multi-line script'
+
+pool:
+   vmImage: ubuntu-latest
+
+variables:
+  COSMOSCON: 'customer-con'
+  SERVICEBUSQUEUE: 'customer-queue'
+  COSMOSCONPARTKEY: '/message/lastName'
+  RESOURCEGROUP_SHARED: 'mcmaisd-rg'
+  LOCATION_SHARED: 'westeurope'
+  COSMOSACC: 'mcmaisd-acc'
+  COSMOSDB: 'mcmaisd-db'
+  APIM: 'mcmaisd'
+  SERVICEBUSNS: 'mcmaisd-ns'
+  LOGANALYTICS: 'mcmaisd-ws'
+  KV: 'mcmaisd-kv'
+  KVSERVICEBUSLABEL: 'mcmaisdcosmosdb'
+  KVCOSMOSDBLABEL: 'mcmaisdservicebus'
+  APPINSIGHTS: 'mcmaisd-ai'
+
+steps:
+- task: CopyFiles@2
+  displayName: 'Copy Files'
+  inputs:
+    TargetFolder: '$(agent.builddirectory)'
+
+- task: AzureCLI@1
+  displayName: 'Azure CLI - Create / Update Azure Resources'
+  inputs:
+    azureSubscription: 'Microsoft Internal Subscription (d2556530-6d03-4f64-9519-f3dc205a8863)'
+    scriptPath: 'deploy/azuredeploy_shared.sh'
+    arguments: '-r $(RESOURCEGROUP_SHARED) -l $(LOCATION_SHARED) -a $(COSMOSACC) -d $(COSMOSDB) -c $(COSMOSCON) -p $(APIM) -n $(SERVICEBUSNS) -q $(SERVICEBUSQUEUE) -w $(LOGANALYTICS) -k $(KV) -s $(KVSERVICEBUSLABEL) -x $(KVCOSMOSDBLABEL) -y "$(COSMOSCONPARTKEY)"'
+    workingDirectory: '$(agent.builddirectory)'
+
+- task: AzureResourceGroupDeployment@2
+  displayName: 'Azure Deployment: Create Or Update Application Insights and integrate with API Management'
+  inputs:
+    azureSubscription: 'Microsoft Internal Subscription (d2556530-6d03-4f64-9519-f3dc205a8863)'
+    resourceGroupName: '$(RESOURCEGROUP_SHARED)'
+    location: '$(LOCATION_SHARED)'
+    csmFile: '$(agent.builddirectory)/deploy/azuredeploy_appinsights.json'
+    csmParametersFile: '$(agent.builddirectory)/deploy/azuredeploy_appinsights.parameters.json'
+    overrideParameters: '-ApplicationInsightsLocation $(LOCATION_SHARED) -ApplicationInsightsInstanceName $(APPINSIGHTS) -ApimServiceName $(APIM)'
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: drop'
+  inputs:
+    PathtoPublish: '$(agent.builddirectory)'
