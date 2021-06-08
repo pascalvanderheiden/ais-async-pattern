@@ -2,13 +2,29 @@
 
 name: CI
 
+env:
+  COSMOSCON: 'customer-con'
+  SERVICEBUSQUEUE: 'customer-queue'
+  COSMOSCONPARTKEY: '/message/lastName'
+  RESOURCEGROUP_SHARED: 'mcmaisd-rg'
+  LOCATION_SHARED: 'westeurope'
+  COSMOSACC: 'mcmaisd-acc'
+  COSMOSDB: 'mcmaisd-db'
+  APIM: 'mcmaisd'
+  SERVICEBUSNS: 'mcmaisd-ns'
+  LOGANALYTICS: 'mcmaisd-ws'
+  KV: 'mcmaisd-kv'
+  KVSERVICEBUSLABEL: 'mcmaisdcosmosdb'
+  KVCOSMOSDBLABEL: 'mcmaisdservicebus'
+  APPINSIGHTS: 'mcmaisd-ai'
+
 # Controls when the action will run. 
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -24,8 +40,14 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
+      
+      - name: Azure CLI script
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az account show
+            az storage -h      # Runs a single command using the runners shell
 
-      # Runs a single command using the runners shell
       - name: Run a one-line script
         run: echo Hello, world!
 
