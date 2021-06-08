@@ -41,18 +41,23 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
       
-      - name: Azure CLI script
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: 'Azure CLI - Create / Update Azure Resources'
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            az account show
-            az storage -h      # Runs a single command using the runners shell
+            ./deploy/azuredeploy_shared.sh -r '${{ env.RESOURCEGROUP_SHARED }}' -l '${{ env.LOCATION_SHARED }}' -a '${{ env.COSMOSACC }}' -d '${{ env.COSMOSDB }}' -c '${{ env.COSMOSCON }}' -p '${{ env.APIM }}' -n '${{ env.SERVICEBUSNS }}' -q '${{ env.SERVICEBUSQUEUE }}' -w '${{ env.LOGANALYTICS }}' -k '${{ env.KV }}' -s '${{ env.KVSERVICEBUSLABEL }}' -x $'{{ env.KVCOSMOSDBLABEL }}' -y '${{ env.COSMOSCONPARTKEY }}'
 
-      - name: Run a one-line script
-        run: echo Hello, world!
 
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
+      - name: 'Azure CLI - Create / Update Azure Resources'
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az deployment group create -g ${{env.RESOURCEGROUP_SHARED}} --template-file ./deploy/azuredeploy_appinsights.json --parameters "./deploy/azuredeploy_appinsights.parameters.json" --parameters "ApplicationInsightsLocation='${{ env.LOCATION_SHARED }}' ApplicationInsightsInstanceName='${{ env.APPINSIGHTS }}' ApimServiceName='${{ env.APIM }}'"
+
+      - name: logout
         run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+          az logout
