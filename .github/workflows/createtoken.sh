@@ -1,0 +1,1 @@
+az ad sp create-for-rbac --name "mcmintegration-github-action" --role contributor --scopes /subscriptions/d2556530-6d03-4f64-9519-f3dc205a8863/resourceGroups/mcmaisd-rg --sdk-auth

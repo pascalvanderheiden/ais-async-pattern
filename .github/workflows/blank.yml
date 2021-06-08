@@ -49,7 +49,8 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            ./deploy/azuredeploy_shared.sh -r '${{ env.RESOURCEGROUP_SHARED }}' -l '${{ env.LOCATION_SHARED }}' -a '${{ env.COSMOSACC }}' -d '${{ env.COSMOSDB }}' -c '${{ env.COSMOSCON }}' -p '${{ env.APIM }}' -n '${{ env.SERVICEBUSNS }}' -q '${{ env.SERVICEBUSQUEUE }}' -w '${{ env.LOGANALYTICS }}' -k '${{ env.KV }}' -s '${{ env.KVSERVICEBUSLABEL }}' -x $'{{ env.KVCOSMOSDBLABEL }}' -y '${{ env.COSMOSCONPARTKEY }}'
+            chmod +x ./deploy/azuredeploy_shared.sh
+            ./deploy/azuredeploy_shared.sh -r '${{ env.RESOURCEGROUP_SHARED }}' -l '${{ env.LOCATION_SHARED }}' -a '${{ env.COSMOSACC }}' -d '${{ env.COSMOSDB }}' -c '${{ env.COSMOSCON }}' -p '${{ env.APIM }}' -n '${{ env.SERVICEBUSNS }}' -q '${{ env.SERVICEBUSQUEUE }}' -w '${{ env.LOGANALYTICS }}' -k '${{ env.KV }}' -s '${{ env.KVSERVICEBUSLABEL }}' -x '${{ env.KVCOSMOSDBLABEL }}' -y '${{ env.COSMOSCONPARTKEY }}'
 
 
       - name: 'Azure CLI - Create / Update Azure Resources'
