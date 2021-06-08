@@ -57,7 +57,7 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            az deployment group create -g ${{env.RESOURCEGROUP_SHARED}} --template-file ./deploy/azuredeploy_appinsights.json --parameters "./deploy/azuredeploy_appinsights.parameters.json" --parameters "ApplicationInsightsLocation='${{ env.LOCATION_SHARED }}' ApplicationInsightsInstanceName='${{ env.APPINSIGHTS }}' ApimServiceName='${{ env.APIM }}'"
+            az deployment group create -g '${{env.RESOURCEGROUP_SHARED}}' --template-file ./deploy/azuredeploy_appinsights.json --parameters "./deploy/azuredeploy_appinsights.parameters.json" --parameters ApplicationInsightsLocation='${{ env.LOCATION_SHARED }}' ApplicationInsightsInstanceName='${{ env.APPINSIGHTS }}' ApimServiceName='${{ env.APIM }}'
 
       - name: logout
         run: |
