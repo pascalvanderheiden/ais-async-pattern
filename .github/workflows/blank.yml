@@ -109,7 +109,6 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            echo "Creating Log Analytics Workspace ${{ env.LOGANALYTICS }}"
             RESULT=$(az monitor log-analytics workspace show -g ${{ env.RESOURCEGROUP }} -n ${{ env.LOGANALYTICS }})
             if [ "$RESULT" = "" ]
             then
@@ -139,7 +138,6 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            echo "Creating API Management Instance ${{ env.APIM }}"
             RESULT=$(az apim check-name -n ${{ env.APIM }})
             if [ "$RESULT" != "true" ]
             then
@@ -171,7 +169,6 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            echo "Creating Service Bus Namespace ${SERVICEBUSNS}"
             RESULT=$(az servicebus namespace exists -n $SERVICEBUSNS)
             if [ "$RESULT" != "true" ]
             then
@@ -190,7 +187,6 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            echo "Creating Service Bus Queue ${{ env.SERVICEBUSQUEUE }}"
             RESULT=$(az servicebus queue show -g ${{ env.RESOURCEGROUP }} --namespace-name ${{ env.SERVICEBUSNS }} -n ${{ env.SERVICEBUSQUEUE }})
             if [ "$RESULT" = "" ]
             then
@@ -222,7 +218,6 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            echo "Creating Key Vault ${{ env.KV }}"
             RESULT=$(az keyvault show -n ${{ env.KV }})
             if [ "$RESULT" = "" ]
             then
