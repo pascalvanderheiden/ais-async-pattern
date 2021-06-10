@@ -1,7 +1,7 @@
 name: Deploy Services
 
 env:
-  RESOURCEGROUP: 'mcmaisd-rg'
+  RESOURCE_GROUP: ${{ github.event.inputs.resource_group }}
 
   PATH_TO_INFRA_BICEP: './deploy/infra.bicep'
   PATH_TO_INFRA_JSON: './deploy/infra.json' #(this file is produced after bicep file is compiled)
@@ -10,13 +10,16 @@ env:
 # Controls when the action will run. 
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  # push:
+  #   branches: [ main ]
+  # pull_request:
+  #   branches: [ main ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+    resource_group:
+    description: 'Resource group name'     
+    required: true
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -44,7 +47,7 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            az deployment group create -g '${{ env.RESOURCEGROUP }}' --template-file ${{ env.PATH_TO_INFRA_JSON }} --parameters ${{ env.PATH_TO_INFRA_PARAM }} -n infra_${{ github.run_number }}_${{ github.run_id }}
+            az deployment group create -g '${{ env.RESOURCE_GROUP }}' --template-file ${{ env.PATH_TO_INFRA_JSON }} --parameters ${{ env.PATH_TO_INFRA_PARAM }} -n infra_${{ github.run_number }}_${{ github.run_id }}
 
       - name: logout
         run: |
