@@ -1,0 +1,45 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "cosmos_container_name": {
+            "value": "customer-con"
+        },
+        "sb_queue_name": {
+            "value": "customer-queue"
+        },
+        "cosmos_partition_key": {
+            "value": "/message/lastName"
+        },
+        "cosmos_acc_name": {
+            "value": "msaisd-acc"
+        },
+        "cosmos_db_name": {
+            "value": "msaisd-db"
+        },
+        "apim_name": {
+            "value": "msaisd"
+        },
+        "sb_name": {
+            "value": "msaisd-ns"
+        },
+        "sb_send_rule_name": {
+            "value": "msaisdservicebus-rule"
+        },
+        "log_analytics_name": {
+            "value": "msaisd-ws"
+        },
+        "kv_name": {
+            "value": "msaisd-kv"
+        },
+        "kv_sb_secret_label": {
+            "value": "msaisdservicebus"
+        },
+        "kv_cosmos_secret_label": {
+            "value": "msaisdcosmosdb"
+        },
+        "app_insights_name": {
+            "value": "msaisd-ai"
+        }
+    }
+}

@@ -1,0 +1,55 @@
+name: Deploy Services
+
+env:
+  RESOURCE_GROUP: ${{ github.event.inputs.resource_group }}
+
+  PATH_TO_INFRA_BICEP: './deploy/infra.bicep'
+  PATH_TO_INFRA_JSON: './deploy/infra.json' #(this file is produced after bicep file is compiled)
+  PATH_TO_INFRA_PARAM: './deploy/infra.parameters.json'
+
+# Controls when the action will run. 
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  # push:
+  #   branches: [ main ]
+  # pull_request:
+  #   branches: [ main ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+    inputs:
+      resource_group:
+        description: 'Resource group name'     
+        required: true
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+
+  deploy_services:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v2
+      
+      # LOGIN TO AZURE. THE LOGGED IN SESSION IS ACTIVE TILL A LOGOUT ACTION IS CALLED (OR THE JOB FINISHED)
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # BUILDING BICEP OUTPUTS A JSON ARM TEMPLATE
+      - name: build bicep 💪
+        run: |
+          az bicep build --file ${{env.PATH_TO_INFRA_BICEP}}
+
+      # DEPLOY THE SERVICES
+      - name: 'create / update azure resources'
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az deployment group create -g '${{ env.RESOURCE_GROUP }}' --template-file ${{ env.PATH_TO_INFRA_JSON }} --parameters ${{ env.PATH_TO_INFRA_PARAM }} -n infra_${{ github.run_number }}_${{ github.run_id }}
+
+      - name: logout
+        run: |
+          az logout

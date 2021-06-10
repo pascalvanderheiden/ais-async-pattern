@@ -1,0 +1,64 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Original
+
+env:
+  COSMOSCON: 'customer-con'
+  SERVICEBUSQUEUE: 'customer-queue'
+  COSMOSCONPARTKEY: '/message/lastName'
+  RESOURCEGROUP_SHARED: 'msaisd-rg'
+  LOCATION_SHARED: 'westeurope'
+  COSMOSACC: 'msaisd-acc'
+  COSMOSDB: 'msaisd-db'
+  APIM: 'msaisd'
+  SERVICEBUSNS: 'msaisd-ns'
+  LOGANALYTICS: 'msaisd-ws'
+  KV: 'msaisd-kv'
+  KVSERVICEBUSLABEL: 'msaisdcosmosdb'
+  KVCOSMOSDBLABEL: 'msaisdservicebus'
+  APPINSIGHTS: 'msaisd-ai'
+
+# Controls when the action will run. 
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+      
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: 'Azure CLI - Create / Update Azure Resources'
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            chmod +x ./deploy/azuredeploy_shared.sh
+            ./deploy/azuredeploy_shared.sh -r '${{ env.RESOURCEGROUP_SHARED }}' -l '${{ env.LOCATION_SHARED }}' -a '${{ env.COSMOSACC }}' -d '${{ env.COSMOSDB }}' -c '${{ env.COSMOSCON }}' -p '${{ env.APIM }}' -n '${{ env.SERVICEBUSNS }}' -q '${{ env.SERVICEBUSQUEUE }}' -w '${{ env.LOGANALYTICS }}' -k '${{ env.KV }}' -s '${{ env.KVSERVICEBUSLABEL }}' -x '${{ env.KVCOSMOSDBLABEL }}' -y '${{ env.COSMOSCONPARTKEY }}'
+
+
+      - name: 'Azure CLI - Create / Update Azure Resources'
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az deployment group create -g '${{env.RESOURCEGROUP_SHARED}}' --template-file ./deploy/azuredeploy_appinsights.json --parameters "./deploy/azuredeploy_appinsights.parameters.json" --parameters ApplicationInsightsLocation='${{ env.LOCATION_SHARED }}' ApplicationInsightsInstanceName='${{ env.APPINSIGHTS }}' ApimServiceName='${{ env.APIM }}'
+
+      - name: logout
+        run: |
+          az logout

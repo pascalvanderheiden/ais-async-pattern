@@ -1,0 +1,3 @@
+# This script creates an app role in AD and gives contribute permission on the resource group where deployment has to be done.
+# copy the output of this command (a JSON payload) and store it as a secret in your environement Key=AZURE_CREDENTIALS;value=JSON payload (don't miss the braces '{', '}')
+az ad sp create-for-rbac --name "<rg_name>" --role contributor --scopes /subscriptions/<subscription-id>/resourceGroups/mcmaisd-rg --sdk-auth
