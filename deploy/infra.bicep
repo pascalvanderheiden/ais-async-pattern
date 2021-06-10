@@ -1,21 +1,22 @@
-param cosmoscont_name string = 'customer-con'
-param servicebusqueue_name string = 'customer-queue'
-param cosmosconpartkey string = '/message/lastName'
-param cosmosacc_name string = 'mcmaisd-acc'
-param cosmosdb_name string = 'mcmaisd-db'
-param apim_name string = 'mcmaisd'
-param servicebusns_name string = 'mcmaisd-ns'
-param loganalytics_name string = 'mcmaisd-ws'
-param kv_name string = 'mcmaisd-kv'
-param kvservicebus_label string = 'mcmaisdcosmosdb'
-param kvcosmosdb_label string = 'mcmaisdservicebus'
-param appinsights_name string = 'mcmaisd-ai'
+param cosmos_container_name string = 'customer-con'
+param sb_queue_name string = 'customer-queue'
+param cosmos_partition_key string = '/message/lastName'
+param cosmos_acc_name string = 'msaisd-acc'
+param cosmos_db_name string = 'msaisd-db'
+param apim_name string = 'msaisd'
+param sb_name string = 'msaisd-ns'
+param sb_send_rule_name string = 'msaisdservicebus-rule'
+param log_analytics_name string = 'msaisd-ws'
+param kv_name string = 'msaisd-kv'
+param kv_sb_secret_label string = 'msaisdservicebus'
+param kv_cosmos_secret_label string = 'msaisdcosmosdb'
+param app_insights_name string = 'msaisd-ai'
 
 // --------------------------------------------
 //  Creating Cosmos DB Account
 // -------------------------------------------- 
 resource cosmos_account 'Microsoft.DocumentDB/databaseAccounts@2021-04-15' = {
-  name: cosmosacc_name
+  name: cosmos_acc_name
   location: resourceGroup().location
   kind: 'GlobalDocumentDB'
   properties: {
@@ -35,23 +36,23 @@ resource cosmos_account 'Microsoft.DocumentDB/databaseAccounts@2021-04-15' = {
 
 resource cosmos_database 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2021-04-15' = {
   parent: cosmos_account
-  name: cosmosdb_name
+  name: cosmos_db_name
   properties: {
     resource: {
-      id: cosmosdb_name
+      id: cosmos_db_name
     }
   }
 }
 
 resource cosmos_container 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2021-04-15' = {
   parent: cosmos_database
-  name: cosmoscont_name
+  name: cosmos_container_name
   properties: {
     resource: {
-      id: cosmoscont_name
+      id: cosmos_container_name
       partitionKey: {
         paths: [
-          cosmosconpartkey
+          cosmos_partition_key
         ]
         kind: 'Hash'
       }
@@ -62,7 +63,7 @@ resource cosmos_container 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/co
 // --------------------------------------------
 //  Creating API Management service
 // -------------------------------------------- 
-resource apim 'Microsoft.ApiManagement/service@2020-06-01-preview' = {
+resource apim 'Microsoft.ApiManagement/service@2020-12-01' = {
   name: apim_name
   location: resourceGroup().location
   sku: {
@@ -79,7 +80,7 @@ resource apim 'Microsoft.ApiManagement/service@2020-06-01-preview' = {
 //  Creating Log analytics workspace
 // -------------------------------------------- 
 resource la_workspace 'microsoft.operationalinsights/workspaces@2020-10-01' = {
-  name: loganalytics_name
+  name: log_analytics_name
   location: resourceGroup().location
   properties: {
     sku: {
@@ -94,7 +95,7 @@ resource la_workspace 'microsoft.operationalinsights/workspaces@2020-10-01' = {
 //  Creating Service bus and queue
 // -------------------------------------------- 
 resource sb 'Microsoft.ServiceBus/namespaces@2017-04-01' = {
-  name: servicebusns_name
+  name: sb_name
   location: resourceGroup().location
   sku: {
     name: 'Premium'
@@ -103,14 +104,14 @@ resource sb 'Microsoft.ServiceBus/namespaces@2017-04-01' = {
   }
 }
 
-resource sb_queue 'Microsoft.ServiceBus/namespaces/queues@2018-01-01-preview' = {
+resource sb_queue 'Microsoft.ServiceBus/namespaces/queues@2017-04-01' = {
   parent: sb
-  name: servicebusqueue_name
+  name: sb_queue_name
 }
 
-resource sb_ns_auth_send 'Microsoft.ServiceBus/namespaces/AuthorizationRules@2021-01-01-preview' = {
+resource sb_ns_send_rule 'Microsoft.ServiceBus/namespaces/AuthorizationRules@2017-04-01' = {
   parent: sb
-  name: kvservicebus_label
+  name: sb_send_rule_name
   properties: {
     rights: [
       'Send'
@@ -121,7 +122,7 @@ resource sb_ns_auth_send 'Microsoft.ServiceBus/namespaces/AuthorizationRules@202
 // --------------------------------------------
 //  Creating Key Vault and secrets
 // -------------------------------------------- 
-resource kv 'Microsoft.KeyVault/vaults@2021-04-01-preview' = {
+resource kv 'Microsoft.KeyVault/vaults@2019-09-01' = {
   name: kv_name
   location: resourceGroup().location
   properties: {
@@ -137,27 +138,27 @@ resource kv 'Microsoft.KeyVault/vaults@2021-04-01-preview' = {
   }
 }
 
-resource kv_cosmosdb_secret 'Microsoft.KeyVault/vaults/secrets@2021-04-01-preview' = {
+resource kv_cosmosdb_secret 'Microsoft.KeyVault/vaults/secrets@2019-09-01' = {
   parent: kv
-  name: kvcosmosdb_label
+  name: kv_cosmos_secret_label
   properties: {
     value: listKeys(cosmos_account.id, '2021-04-15').primaryMasterKey
   }
 }
 
-resource kv_sb_secret 'Microsoft.KeyVault/vaults/secrets@2021-04-01-preview' = {
+resource kv_sb_secret 'Microsoft.KeyVault/vaults/secrets@2019-09-01' = {
   parent: kv
-  name: kvservicebus_label
+  name: kv_sb_secret_label
   properties: {
-    value: listKeys(sb_ns_auth_send.name, '2021-04-01-preview').primaryConnectionString
+    value: listKeys(sb_ns_send_rule.id, '2017-04-01').primaryConnectionString
   }
 }
 
 // ----------------------------------------------------------------------------------------
 //  Creating Application insights and APIM Logging and diagnostics
 // ----------------------------------------------------------------------------------------
-resource ai 'microsoft.insights/components@2020-02-02-preview' = {
-  name: appinsights_name
+resource ai 'Microsoft.Insights/components@2020-02-02-preview' = {
+  name: app_insights_name
   location: resourceGroup().location
   kind: 'other'
   properties: {
@@ -168,7 +169,7 @@ resource ai 'microsoft.insights/components@2020-02-02-preview' = {
   }
 }
 
-resource apim_logger 'Microsoft.ApiManagement/service/loggers@2021-01-01-preview' = {
+resource apim_logger 'Microsoft.ApiManagement/service/loggers@2020-12-01' = {
   parent: apim
   name: '${apim_name}-ai'
   properties: {
@@ -184,7 +185,7 @@ resource apim_logger 'Microsoft.ApiManagement/service/loggers@2021-01-01-preview
   ]
 }
 
-resource apim_diag 'Microsoft.ApiManagement/service/diagnostics@2021-01-01-preview' = {
+resource apim_diag 'Microsoft.ApiManagement/service/diagnostics@2020-12-01' = {
   parent: apim
   name: 'applicationinsights'
   properties: {
