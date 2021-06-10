@@ -108,6 +108,16 @@ resource sb_queue 'Microsoft.ServiceBus/namespaces/queues@2018-01-01-preview' = 
   name: servicebusqueue_name
 }
 
+resource sb_ns_auth_send 'Microsoft.ServiceBus/namespaces/AuthorizationRules@2021-01-01-preview' = {
+  parent: sb
+  name: kvservicebus_label
+  properties: {
+    rights: [
+      'Send'
+    ]
+  }
+}
+
 // --------------------------------------------
 //  Creating Key Vault and secrets
 // -------------------------------------------- 
@@ -139,7 +149,7 @@ resource kv_sb_secret 'Microsoft.KeyVault/vaults/secrets@2021-04-01-preview' = {
   parent: kv
   name: kvservicebus_label
   properties: {
-    value: listKeys(sb.name, '2017-04-01').primaryConnectionString
+    value: listKeys(sb_ns_auth_send.name, '2021-04-01-preview').primaryConnectionString
   }
 }
 
