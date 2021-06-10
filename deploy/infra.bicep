@@ -14,7 +14,6 @@ param appinsights_name string = 'mcmaisd-ai'
 // --------------------------------------------
 //  Creating Cosmos DB Account
 // -------------------------------------------- 
-
 resource cosmos_account 'Microsoft.DocumentDB/databaseAccounts@2021-04-15' = {
   name: cosmosacc_name
   location: resourceGroup().location
@@ -79,7 +78,6 @@ resource apim 'Microsoft.ApiManagement/service@2020-06-01-preview' = {
 // --------------------------------------------
 //  Creating Log analytics workspace
 // -------------------------------------------- 
-
 resource la_workspace 'microsoft.operationalinsights/workspaces@2020-10-01' = {
   name: loganalytics_name
   location: resourceGroup().location
