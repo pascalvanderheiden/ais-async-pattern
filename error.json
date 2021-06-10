@@ -1,5 +1,0 @@
-{
-    "error": {
-        "code":"InvalidTemplate",
-        "message":"Deployment template validation failed: 'The template reference 'msaisdservicebus' is ambiguous: there are multiple template resources '/subscriptions/d2556530-6d03-4f64-9519-f3dc205a8863/resourceGroups/mcmaisd-rg/providers/Microsoft.ServiceBus/namespaces/msaisd-ns/AuthorizationRules/msaisdservicebus,/subscriptions/d2556530-6d03-4f64-9519-f3dc205a8863/resourceGroups/mcmaisd-rg/providers/Microsoft.KeyVault/vaults/msaisd-kv/secrets/msaisdservicebus' defined with this name. Please use fully qualified resource identity instead. Please see https://aka.ms/arm-template-expressions/#reference for usage details.'.",
-        "additionalInfo":[{"type":"TemplateViolation","info":{"lineNumber":0,"linePosition":0,"path":""}}]}}
