@@ -44,7 +44,7 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            az deployment group create -g '${{ env.RESOURCEGROUP }}' --template-file ${{ env.PATH_TO_INFRA_JSON }} --parameters ${{ env.PATH_TO_INFRA_PARAM }}
+            az deployment group create -g '${{ env.RESOURCEGROUP }}' --template-file ${{ env.PATH_TO_INFRA_JSON }} --parameters ${{ env.PATH_TO_INFRA_PARAM }} -n infra_${{ github.run_number }}_${{ github.run_id }}
 
       - name: logout
         run: |
